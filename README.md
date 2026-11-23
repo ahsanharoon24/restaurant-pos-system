@@ -2,7 +2,7 @@
 
 Point-of-sale and billing for restaurants, cafés, dhabas, fast food outlets and cloud kitchens — menu management, table status, fast order taking, receipt printing and daily sales reporting on any device.
 
-**[Live demo](https://ahsan-restaurant-pos.vercel.app)** · Login: `admin` / `admin123`
+**[Live demo](https://posdesk.vercel.app)** · Login: `admin` / `admin123`
 
 ![Dashboard](screenshots/01_dashboard.png)
 
