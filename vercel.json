@@ -10,6 +10,7 @@
           "static/**",
           "schema.sql",
           "pos.db",
+          "tenants/**",
           "*.py"
         ]
       }

@@ -1,7 +1,14 @@
--- Restaurant POS — TENANT schema (har client ki apni DB file: tenants/u<id>.db)
--- users table is file me NAHI hoti — wo central pos.db me hai (logins/admin).
+-- Restaurant POS — SQLite schema (portfolio demo)
 
 PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    full_name     TEXT NOT NULL DEFAULT '',
+    created_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
 
 -- ============================================================
 -- RESTAURANT SETTINGS (single row, id = 1)

@@ -4,8 +4,8 @@
 <h1>📊 Dashboard — {{ today }}</h1>
 
 <div class="cards">
-  <div class="card green"><div class="num">Rs. {{ '%.0f'|format(sales) }}</div><div class="lbl">Today's Sales</div></div>
-  <div class="card"><div class="num">{{ orders_today }}</div><div class="lbl">Today's Paid Orders</div></div>
+  <div class="card green"><div class="num">Rs. {{ '%.0f'|format(sales) }}</div><div class="lbl">Aaj ki Sales</div></div>
+  <div class="card"><div class="num">{{ orders_today }}</div><div class="lbl">Aaj ke Paid Orders</div></div>
   <div class="card orange"><div class="num">{{ open_orders }}</div><div class="lbl">Open Orders</div></div>
   <div class="card green"><div class="num">{{ free_tables }}/{{ total_tables }}</div><div class="lbl">Free Tables</div></div>
 </div>
@@ -29,7 +29,7 @@
 </div>
 
 <div class="panel">
-  <h2>🔥 Top Items (today)</h2>
+  <h2>🔥 Top Items (aaj)</h2>
   {% if top %}
   <table>
     <tr><th>Item</th><th>Qty</th><th>Amount</th></tr>

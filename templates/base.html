@@ -7,14 +7,22 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<aside class="sidebar">
+<button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+<div class="scrim" id="scrim"></div>
+<aside class="sidebar" id="sidebar">
   <div class="brand">
     <span class="brand-logo">🍽</span>
     <div class="brand-text">
-      <strong>{{ settings.restaurant_name }}</strong>
-      <small>POS System</small>
+      <strong>{{ settings.restaurant_name or 'Restaurant POS' }}</strong>
+      <small>{% if impersonating %}Viewing: {{ tenant_name }}{% else %}POS System{% endif %}</small>
     </div>
   </div>
+  {% if impersonating %}
+  <div style="background:#fef3c7;color:#92400e;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12.5px;line-height:1.5;">
+    <strong>👀 Viewing {{ tenant_name }}'s data</strong> — anything you add or change goes only to their account.
+    <a href="{{ url_for('back_to_account') }}" style="display:block;margin-top:6px;font-weight:700;color:#92400e;">← Back to my account</a>
+  </div>
+  {% endif %}
   <nav>
     <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.path == '/' }}">📊 Dashboard</a>
     <div class="nav-group">ORDERS</div>
@@ -27,6 +35,9 @@
     <a href="{{ url_for('sales') }}" class="{{ 'active' if request.path == '/sales' }}">💰 Sales Report</a>
     <div class="nav-group">SYSTEM</div>
     <a href="{{ url_for('settings_page') }}" class="{{ 'active' if request.path == '/settings' }}">⚙️ Settings</a>
+    {% if is_admin %}
+    <a href="{{ url_for('users_page') }}" class="{{ 'active' if request.path == '/users' }}">👥 Users &amp; Clients</a>
+    {% endif %}
     <a href="{{ url_for('password') }}">🔑 Change Password</a>
     <a href="{{ url_for('logout') }}">🚪 Logout</a>
   </nav>
@@ -39,5 +50,29 @@
   {% endwith %}
   {% block content %}{% endblock %}
 </main>
+<script>
+// Mobile hamburger — sidebar sirf click pe khule, warna chhupa rahe
+(function () {
+  var btn = document.getElementById('menuBtn');
+  var sb = document.getElementById('sidebar');
+  var sc = document.getElementById('scrim');
+  if (!btn || !sb) return;
+  function setOpen(open) {
+    sb.classList.toggle('open', open);
+    if (sc) sc.classList.toggle('show', open);
+    btn.textContent = open ? '✕' : '☰';
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  btn.addEventListener('click', function () { setOpen(!sb.classList.contains('open')); });
+  if (sc) sc.addEventListener('click', function () { setOpen(false); });
+  sb.querySelectorAll('nav a').forEach(function (a) {
+    a.addEventListener('click', function () { setOpen(false); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setOpen(false);
+  });
+})();
+</script>
+<script src="{{ url_for('static', filename='eye.js') }}"></script>
 </body>
 </html>

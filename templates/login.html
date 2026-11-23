@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — {{ settings.restaurant_name }}</title>
+<title>Login — {{ settings.restaurant_name or 'Restaurant POS' }}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <style>
 body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0f172a; }
@@ -16,7 +16,7 @@ h1 { font-size: 20px; }
 <body>
 <div class="login-card">
   <div class="login-logo">🍽</div>
-  <h1>{{ settings.restaurant_name }}</h1>
+  <h1>{{ settings.restaurant_name or 'Restaurant POS' }}</h1>
   <p class="login-sub">Restaurant POS System</p>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
@@ -25,10 +25,14 @@ h1 { font-size: 20px; }
     <label>Username</label>
     <input type="text" name="username" required autofocus>
     <label>Password</label>
-    <input type="password" name="password" required>
+    <div class="pw-field">
+      <input type="password" name="password" required>
+      <button type="button" class="pw-eye" tabindex="-1" title="Show password">👁</button>
+    </div>
     <br><br>
     <button class="btn btn-primary" style="width:100%; padding:10px;">Login</button>
   </form>
 </div>
+<script src="{{ url_for('static', filename='eye.js') }}"></script>
 </body>
 </html>
