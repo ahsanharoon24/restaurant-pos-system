@@ -82,8 +82,8 @@ def ensure_tenant(uid):
         conn = sqlite3.connect(path)
         try:
             conn.execute('PRAGMA journal_mode = WAL')
-            conn.executescript(open(os.path.join(BASE_DIR, 'schema.sql'),
-                                    encoding='utf-8').read())
+            with open(os.path.join(BASE_DIR, 'schema.sql'), encoding='utf-8') as f:
+                conn.executescript(f.read())
             conn.commit()
         finally:
             conn.close()
