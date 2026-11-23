@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}New Order — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+{% set emoji_map = {
+  'Main Course': '🍛', 'Rice': '🍚', 'Breads': '🫓', 'BBQ': '🍢', 'Drinks': '🥤',
+  'Desserts': '🍰', 'Fast Food': '🍔', 'Starters': '🥗', 'Soup': '🍲', 'Seafood': '🍤',
+  'Pizza': '🍕', 'Burger': '🍔', 'Chinese': '🥡', 'Mandi': '🍗', 'Karahi': '🍛',
+  'General': '🍽️'
+} %}
+<h1>➕ New Order — tap dishes to add</h1>
+
+<div class="pos-toolbar">
+  <div>
+    <label>Table</label>
+    <select name="table_select" id="table_select">
+      <option value="">Walk-in (no table)</option>
+      {% for t in tables %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="pos-search">
+    <label>Search dish</label>
+    <input type="text" id="pos_search" placeholder="Type dish name..." autocomplete="off">
+  </div>
+</div>
+
+<form method="post" id="order_form" onsubmit="return submitCheck();">
+  <input type="hidden" name="table_id" id="table_id" value="">
+  <input type="hidden" name="discount" id="discount" value="0">
+  <div class="pos-layout">
+    <!-- ============ LEFT: dish tiles ============ -->
+    <div class="pos-left">
+      <div class="cat-tabs" id="cat_tabs">
+        <button type="button" class="cat-tab on" data-cat="">All</button>
+        {% for c in cats %}<button type="button" class="cat-tab" data-cat="{{ c }}">{{ c }}</button>{% endfor %}
+      </div>
+      <div class="item-grid pos-grid" id="pos_grid">
+        {% for it in menu %}
+        <button type="button" class="pos-tile" data-id="{{ it.id }}" data-name="{{ it.name }}"
+                data-cat="{{ it.category }}" data-price="{{ it.price }}">
+          {% if it.image_path %}
+            <img src="{{ url_for('static', filename=it.image_path) }}" alt="{{ it.name }}" loading="lazy">
+          {% else %}
+            <span class="tile-emoji">{{ emoji_map.get(it.category, '🍽️') }}</span>
+          {% endif %}
+          <span class="tile-name">{{ it.name }}</span>
+          <span class="tile-price">Rs. {{ '%.0f'|format(it.price) }}</span>
+          <span class="tile-qty" data-badge="{{ it.id }}"></span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ============ RIGHT: current order ============ -->
+    <div class="order-panel">
+      <h2 style="margin-top:0;">🧾 Current Order</h2>
+      <div id="order_items" class="o-items">
+        <p style="color:#94a3b8; font-size:13px;">Tap dishes on the left to add them here.</p>
+      </div>
+      <div class="o-totals">
+        <div class="o-line"><span>Subtotal</span><span id="t_subtotal">Rs. 0</span></div>
+        {% if gst %}
+        <div class="o-line"><span>GST ({{ '%.0f'|format(gst) }}%)</span><span id="t_gst">Rs. 0</span></div>
+        {% endif %}
+        <div class="o-line"><span>Discount</span><span id="t_discount">- Rs. 0</span></div>
+        <div class="o-line o-grand"><span>TOTAL</span><span id="t_total">Rs. 0</span></div>
+      </div>
+      <button type="submit" class="btn btn-primary o-place" id="place_btn">✅ Place Order</button>
+    </div>
+  </div>
+</form>
+
+<script>
+const GST = {{ gst }};
+const ITEMS = {};
+document.querySelectorAll('.pos-tile').forEach(function (t) {
+  ITEMS[t.dataset.id] = { name: t.dataset.name, price: parseFloat(t.dataset.price) };
+});
+const state = {};   // id -> qty
+let activeCat = '';
+
+function fmt(n) { return 'Rs. ' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+function addItem(id, delta) {
+  if (!(id in state)) state[id] = 0;
+  state[id] += delta;
+  if (state[id] <= 0) delete state[id];
+  sync();
+}
+
+function removeItem(id) {
+  delete state[id];
+  sync();
+}
+
+function clearAll() {
+  for (const k in state) delete state[k];
+  sync();
+}
+
+function sync() {
+  const wrap = document.getElementById('order_items');
+  wrap.innerHTML = '';
+  let subtotal = 0, count = 0;
+  for (const id in state) {
+    const it = ITEMS[id], qty = state[id];
+    subtotal += it.price * qty; count += qty;
+    const row = document.createElement('div');
+    row.className = 'o-item';
+    row.innerHTML =
+      '<div class="o-info"><div class="o-name">' + it.name + '</div>' +
+      '<div class="o-price">' + fmt(it.price) + '</div></div>' +
+      '<div class="o-ctrl">' +
+        '<button type="button" class="qbtn minus" onclick="addItem(' + id + ',-1)">−</button>' +
+        '<span class="o-qty">' + qty + '</span>' +
+        '<button type="button" class="qbtn plus" onclick="addItem(' + id + ',1)">+</button>' +
+        '<button type="button" class="qbtn rm" onclick="removeItem(' + id + ')" title="Remove">✕</button>' +
+      '</div>' +
+      '<div class="o-amt">' + fmt(it.price * qty) + '</div>';
+    wrap.appendChild(row);
+    // hidden qty input for form submit
+    let hid = document.getElementById('qty_' + id);
+    if (!hid) {
+      hid = document.createElement('input');
+      hid.type = 'hidden'; hid.name = 'qty_' + id; hid.id = 'qty_' + id;
+      document.getElementById('order_form').appendChild(hid);
+    }
+    hid.value = qty;
+    const badge = document.querySelector('[data-badge="' + id + '"]');
+    if (badge) { badge.textContent = qty; badge.style.display = qty ? 'flex' : 'none'; }
+  }
+  // cleanup hidden inputs for removed items
+  document.querySelectorAll('#order_form input[name^="qty_"]').forEach(function (h) {
+    const id = h.name.slice(4);
+    if (!(id in state)) h.remove();
+  });
+  const disc = Math.min(parseFloat(document.getElementById('discount').value) || 0, subtotal);
+  const gstAmt = subtotal * GST / 100;
+  const total = Math.max(subtotal + gstAmt - disc, 0);
+  document.getElementById('t_subtotal').textContent = fmt(subtotal);
+  const g = document.getElementById('t_gst');
+  if (g) g.textContent = fmt(gstAmt);
+  document.getElementById('t_discount').textContent = disc > 0 ? '- ' + fmt(disc) : '- Rs. 0';
+  document.getElementById('t_total').textContent = fmt(total);
+  document.getElementById('place_btn').textContent =
+    count ? '✅ Place Order (' + count + ' items)' : '✅ Place Order';
+}
+
+// tap tile = add 1
+document.querySelectorAll('.pos-tile').forEach(function (t) {
+  t.addEventListener('click', function () { addItem(t.dataset.id, 1); });
+});
+// table select -> hidden field
+document.getElementById('table_select').addEventListener('change', function () {
+  document.getElementById('table_id').value = this.value;
+});
+// discount -> state line
+document.getElementById('discount').addEventListener('input', function () { sync(); });
+// category filter
+document.querySelectorAll('.cat-tab').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.cat-tab').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    activeCat = b.dataset.cat;
+    applyFilters();
+  });
+});
+// search filter
+document.getElementById('pos_search').addEventListener('input', function () { applyFilters(); });
+
+function applyFilters() {
+  const q = document.getElementById('pos_search').value.trim().toLowerCase();
+  document.querySelectorAll('.pos-tile').forEach(function (t) {
+    const okCat = !activeCat || t.dataset.cat === activeCat;
+    const okName = !q || t.dataset.name.toLowerCase().indexOf(q) !== -1;
+    t.style.display = (okCat && okName) ? '' : 'none';
+  });
+}
+
+function submitCheck() {
+  const n = Object.keys(state).length;
+  if (!n) { alert('No items selected — tap dishes to add them.'); return false; }
+  return true;
+}
+sync();
+</script>
+{% endblock %}

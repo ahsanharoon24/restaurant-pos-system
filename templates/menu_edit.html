@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ item.name }} — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+<h1>✏️ Edit Dish</h1>
+
+<div class="panel" style="max-width:620px;">
+  <form method="post" enctype="multipart/form-data" class="form-row" style="align-items:start;">
+    <div>
+      <h2>Current Photo</h2>
+      {% if item.image_path %}
+        <img class="preview-img" src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.name }}">
+        <br><label style="margin-top:8px;"><input type="checkbox" name="image_action" value="remove" style="width:auto;"> Remove photo</label>
+      {% else %}
+        <div class="preview-emoji">🍽️</div>
+        <p style="color:#94a3b8; font-size:12px;">No photo yet — upload one below.</p>
+      {% endif %}
+    </div>
+    <div style="flex:1;">
+      <label>Dish Name *</label>
+      <input type="text" name="name" value="{{ item.name }}" required>
+      <label>Category</label>
+      <input type="text" name="category" value="{{ item.category }}">
+      <label>Price (Rs.)</label>
+      <input type="number" step="0.01" name="price" value="{{ item.price }}" min="0">
+      <label>📷 Replace Photo</label>
+      <input type="file" name="image" accept="image/*">
+      <br><br>
+      <button class="btn btn-primary">💾 Save Changes</button>
+      <a class="btn" href="{{ url_for('menu_page') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<div class="panel" style="max-width:620px;">
+  <h2>Status</h2>
+  <form method="post" action="{{ url_for('menu_toggle', mid=item.id) }}">
+    <button class="btn {{ 'btn-danger' if item.is_available else 'btn-success' }}">
+      {{ 'Mark as Sold Out' if item.is_available else 'Mark as Available' }}
+    </button>
+  </form>
+  <h2 style="color:#dc2626;">Danger Zone</h2>
+  <form method="post" action="{{ url_for('menu_delete', mid=item.id) }}"
+        onsubmit="return confirm('Delete {{ item.name }} permanently?');">
+    <button class="btn btn-danger">🗑 Delete Dish</button>
+  </form>
+</div>
+{% endblock %}

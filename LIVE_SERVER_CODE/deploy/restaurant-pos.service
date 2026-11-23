@@ -1,0 +1,16 @@
+[Unit]
+Description=Restaurant POS (Flask + gunicorn)
+After=network.target
+
+[Service]
+User=pos
+Group=pos
+WorkingDirectory=/opt/restaurant-pos
+# !! Generated 2026-09-04 — isko sirf server pe rakho, public repo me kabhi nahi
+Environment=SECRET_KEY=9f5fb5e0184b2fe2e11f992897f78a9ce45da59a72f0426922b07de03ebf9771
+ExecStart=/opt/restaurant-pos/venv/bin/gunicorn --workers 2 --threads 2 --bind 127.0.0.1:5001 --timeout 60 wsgi:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

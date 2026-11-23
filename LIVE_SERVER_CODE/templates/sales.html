@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Sales Report — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+<h1>💰 Sales Report</h1>
+
+<div class="filter-bar">
+  <form method="get">
+    <label>From</label><input type="date" name="from" value="{{ frm }}">
+    <label>To</label><input type="date" name="to" value="{{ to }}">
+    <button class="btn btn-primary">Filter</button>
+  </form>
+</div>
+
+<div class="cards">
+  <div class="card green"><div class="num">Rs. {{ '%.0f'|format(total) }}</div><div class="lbl">Total Sales ({{ frm }} → {{ to }})</div></div>
+</div>
+
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; align-items:start;">
+  <div class="panel">
+    <h2>Daily Sales</h2>
+    <table>
+      <tr><th>Date</th><th>Orders</th><th>Sales</th></tr>
+      {% for r in rows %}<tr><td>{{ r.d }}</td><td>{{ r.orders }}</td><td>Rs. {{ '%.2f'|format(r.sales) }}</td></tr>{% else %}
+      <tr><td colspan="3" style="color:#64748b;">No sales in this range.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div>
+    <div class="panel">
+      <h2>By Payment Method</h2>
+      <table>
+        <tr><th>Method</th><th>Orders</th><th>Sales</th></tr>
+        {% for m in by_method %}<tr><td>{{ m.payment_method or '—' }}</td><td>{{ m.c }}</td><td>Rs. {{ '%.0f'|format(m.s) }}</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div class="panel">
+      <h2>By Category</h2>
+      <table>
+        <tr><th>Category</th><th>Sales</th></tr>
+        {% for c in by_cat %}<tr><td>{{ c.category }}</td><td>Rs. {{ '%.0f'|format(c.s) }}</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

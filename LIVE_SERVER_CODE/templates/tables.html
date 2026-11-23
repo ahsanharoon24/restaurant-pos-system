@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Tables — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+<h1>🪑 Tables</h1>
+
+<div class="panel">
+  <h2>Add Table</h2>
+  <form method="post" class="form-row" style="align-items:end;">
+    <div><label>Table Name *</label><input type="text" name="name" placeholder="e.g. T1, Table 5" required></div>
+    <div><label>Seats</label><input type="number" name="seats" value="2" min="1"></div>
+    <div><button class="btn btn-primary">➕ Add</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <table>
+    <tr><th>Name</th><th>Seats</th><th>Status</th><th>Open Order</th><th></th></tr>
+    {% for t in tables %}
+    <tr>
+      <td>{{ t.name }}</td><td>{{ t.seats }}</td>
+      {% if open_map and t.id in open_map %}
+        <td><span class="badge open">Occupied</span></td>
+        <td><a href="{{ url_for('order_view', oid=open_map[t.id].oid) }}">Order #{{ open_map[t.id].oid }} — Rs. {{ '%.0f'|format(open_map[t.id].t) }}</a></td>
+      {% else %}
+        <td><span class="badge paid">Free</span></td><td>—</td>
+      {% endif %}
+      <td>
+        <form method="post" action="{{ url_for('table_toggle', tid=t.id) }}" class="no-print">
+          <button class="btn btn-sm {{ 'btn-danger' if t.is_active else '' }}">{{ 'Disable' if t.is_active else 'Enable' }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

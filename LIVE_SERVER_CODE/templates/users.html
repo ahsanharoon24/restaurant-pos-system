@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Users & Clients — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+<h1>👥 Users &amp; Clients</h1>
+
+<div class="panel" style="background:#ecfdf5;">
+  Create an account for each client here — set the username and password, then hand the login to them.
+  <strong>Every account has its own separate database</strong>: menus, tables, orders and settings never mix
+  between clients. Use <strong>Open Dashboard</strong> to set up a client's menu/settings yourself
+  (you'll see a yellow bar while inside their data). This page is visible to the main admin only.
+</div>
+
+<div class="panel" style="max-width:600px;">
+  <h3>➕ Create Client Account</h3>
+  <form method="post" action="{{ url_for('user_add') }}">
+    <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:150px;">
+        <label>Username *</label>
+        <input type="text" name="username" placeholder="e.g. tandoori_owner" required>
+      </div>
+      <div style="flex:1;min-width:150px;">
+        <label>Full Name</label>
+        <input type="text" name="full_name" placeholder="e.g. Mr. Ahmed">
+      </div>
+    </div>
+    <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:150px;">
+        <label>Password * (min 6 characters)</label>
+        <div class="pw-field">
+          <input type="password" name="password" placeholder="set password for client" required>
+          <button type="button" class="pw-eye" tabindex="-1" title="Show password">👁</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:150px;">
+        <label>Role</label>
+        <select name="role">
+          <option value="user" selected>Client (POS only)</option>
+          <option value="admin">Admin (full control)</option>
+        </select>
+      </div>
+    </div>
+    <br>
+    <button class="btn btn-primary">➕ Create Account</button>
+  </form>
+</div>
+
+<div class="panel">
+  <h3>All Accounts</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>ID</th><th>Username</th><th>Full Name</th><th>Role</th><th>Created</th><th>Actions</th></tr>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td><strong>{{ u.username }}</strong>{% if u.id == session['user']['id'] %} <span class="badge paid">you</span>{% endif %}</td>
+      <td>{{ u.full_name or '—' }}</td>
+      <td>
+        {% if u.role == 'admin' %}<span class="badge paid">admin</span>
+        {% else %}<span class="badge open">client</span>{% endif %}
+      </td>
+      <td>{{ u.created_at }}</td>
+      <td>
+        {% if u.id != session['user']['id'] %}
+        <form method="post" action="{{ url_for('user_open', uid=u.id) }}" style="display:inline;">
+          <button class="btn btn-sm" title="Open this account's dashboard to set it up">👁 Open Dashboard</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('user_password', uid=u.id) }}"
+              style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <div class="pw-field" style="width:170px;">
+            <input type="password" name="password" placeholder="new password (min 6)">
+            <button type="button" class="pw-eye" tabindex="-1" title="Show password">👁</button>
+          </div>
+          <button class="btn btn-sm">🔑 Reset</button>
+        </form>
+        <form method="post" action="{{ url_for('user_role', uid=u.id) }}" style="display:inline;">
+          <button class="btn btn-sm" title="Toggle role"
+            {% if u.id == session['user']['id'] or (u.role == 'admin' and users|selectattr('role','equalto','admin')|list|length == 1) %}disabled{% endif %}>
+            {% if u.role == 'admin' %}→ client{% else %}→ admin{% endif %}
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('user_delete', uid=u.id) }}"
+              onsubmit="return confirm('Delete account {{ u.username }}?');" style="display:inline;">
+          <button class="btn btn-sm btn-danger"
+            {% if u.id == session['user']['id'] or (u.role == 'admin' and users|selectattr('role','equalto','admin')|list|length == 1) %}disabled{% endif %}>🗑 Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="color:#64748b;">No accounts yet.</td></tr>
+    {% endfor %}
+  </table>
+  </div>
+  <p style="color:#64748b;font-size:12px;margin-top:10px;">
+    Safeguards: you cannot delete your own account or change your own role, and the last admin can never be
+    deleted or demoted. Deleting an account also deletes that client's whole database (menu, orders, settings) —
+    there is no undo. Clients can change their own password anytime (Change Password) — if they forget it, reset it here.
+  </p>
+</div>
+{% endblock %}

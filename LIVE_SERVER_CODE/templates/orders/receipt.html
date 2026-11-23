@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Receipt {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="receipt-wrap">
+  <div class="no-print" style="display:flex; gap:10px; margin-bottom:14px;">
+    <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
+    <a class="btn" href="{{ url_for('order_view', oid=order.id) }}">← Back</a>
+  </div>
+  <div class="receipt">
+    <h2>{{ settings.restaurant_name }}</h2>
+    <div class="center">{{ settings.address }}</div>
+    <div class="center">{{ settings.phone }}</div>
+    <hr>
+    <div>Order: <strong>{{ order.order_number }}</strong></div>
+    <div>Date: {{ order.created_at }}</div>
+    {% if table %}<div>Table: {{ table.name }}</div>{% endif %}
+    <hr>
+    <table>
+      <tr><th>Item</th><th>Qty</th><th>Rs.</th></tr>
+      {% for it in items %}
+      <tr><td>{{ it.item_name }}</td><td>{{ '%.0f'|format(it.qty) }}</td><td>{{ '%.2f'|format(it.amount) }}</td></tr>
+      {% endfor %}
+    </table>
+    <hr>
+    <table>
+      <tr><td>Subtotal</td><td style="text-align:right;">Rs. {{ '%.2f'|format(order.subtotal) }}</td></tr>
+      {% if order.gst_amount %}<tr><td>GST {{ '%.0f'|format(order.gst_percent) }}%</td><td style="text-align:right;">Rs. {{ '%.2f'|format(order.gst_amount) }}</td></tr>{% endif %}
+      {% if order.discount %}<tr><td>Discount</td><td style="text-align:right;">- Rs. {{ '%.2f'|format(order.discount) }}</td></tr>{% endif %}
+      <tr><td><strong>TOTAL</strong></td><td style="text-align:right;"><strong>Rs. {{ '%.2f'|format(order.total) }}</strong></td></tr>
+      <tr><td>Paid via</td><td style="text-align:right;">{{ order.payment_method|upper }}</td></tr>
+    </table>
+    <hr>
+    <div class="center">{{ settings.receipt_footer }}</div>
+  </div>
+</div>
+{% endblock %}

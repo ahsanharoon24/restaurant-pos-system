@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Orders — {{ settings.restaurant_name }}{% endblock %}
+{% block content %}
+<h1>🧾 All Orders</h1>
+
+<div class="filter-bar">
+  <form method="get">
+    <label>Status</label>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="open" {{ 'selected' if status == 'open' }}>Open</option>
+      <option value="paid" {{ 'selected' if status == 'paid' }}>Paid</option>
+      <option value="cancelled" {{ 'selected' if status == 'cancelled' }}>Cancelled</option>
+    </select>
+    <label>Date</label>
+    <input type="date" name="day" value="{{ day }}" onchange="this.form.submit()">
+  </form>
+</div>
+
+<div class="panel">
+  <table>
+    <tr><th>Order No</th><th>Table</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th><th></th></tr>
+    {% for o in orders %}
+    <tr>
+      <td><a href="{{ url_for('order_view', oid=o.id) }}">{{ o.order_number }}</a></td>
+      <td>{{ tables.get(o.table_id, 'Walk-in') }}</td>
+      <td>{{ o.subtotal }}</td>
+      <td>Rs. {{ '%.2f'|format(o.total) }}</td>
+      <td><span class="badge {{ o.status }}">{{ o.status }}{% if o.status == 'paid' %} · {{ o.payment_method }}{% endif %}</span></td>
+      <td>{{ o.created_at }}</td>
+      <td><a class="btn btn-sm" href="{{ url_for('order_receipt', oid=o.id) }}">🧾 Receipt</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="color:#64748b;">No orders found.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
